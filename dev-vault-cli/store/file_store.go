@@ -4,6 +4,7 @@ import (
 	"dev-vault-cli/models"
 	"encoding/json"
 	"os"
+	"strings"
 )
 
 type FileStore struct {
@@ -109,4 +110,27 @@ func (f FileStore) Delete(id string) error {
 	return f.save(updated)
 }
 
-func (f FileStore) Search(query string) ([]models.Snippet, error)
+func (f FileStore) Search(query string) ([]models.Snippet, error) {
+	snippets, err := f.load()
+	if err != nil {
+		return nil, err
+	}
+	query = strings.ToLower(query)
+	var result []models.Snippet
+	for _, snippet := range snippets {
+		if strings.Contains(strings.ToLower(snippet.Title), query) ||
+			strings.Contains(strings.ToLower(snippet.Content), query) {
+
+			result = append(result, snippet)
+			continue
+		}
+		for _, tag := range snippet.Tags {
+			if strings.Contains(strings.ToLower(tag), query) {
+				result = append(result, snippet)
+				break
+			}
+		}
+	}
+	return result, nil
+
+}
