@@ -3,6 +3,7 @@ package store
 import (
 	"dev-vault-cli/models"
 	"encoding/json"
+	"io"
 	"os"
 	"strings"
 )
@@ -32,8 +33,8 @@ func (f FileStore) load() ([]models.Snippet, error) {
 
 	decoder := json.NewDecoder(file)
 	err = decoder.Decode(&snippets)
-	if err != nil {
-		return nil, err
+	if err == io.EOF {
+		return []models.Snippet{}, nil
 	}
 
 	return snippets, nil
