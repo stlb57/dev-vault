@@ -10,10 +10,20 @@ type FileStore struct {
 	filepath string
 }
 
+func NewFileStore(path string) *FileStore {
+	return &FileStore{
+		filepath: path,
+	}
+}
+
 func (f FileStore) load() ([]models.Snippet, error) {
 	file, err := os.Open(f.filepath)
+
 	if err != nil {
-		return nil, err
+		if os.IsNotExist(err) {
+			return []models.Snippet{}, nil
+		}
+
 	}
 	defer file.Close()
 
@@ -44,6 +54,17 @@ func (f FileStore) save(snippets []models.Snippet) error {
 	return nil
 }
 
+func (f FileStore) Save(snippet models.Snippet) error {
+	snippets, err := f.load()
+	if err != nil {
+		return err
+	}
+
+	snippets = append(snippets, snippet)
+
+	return f.save(snippets)
+}
+
 func (f FileStore) GetAll() ([]models.Snippet, error) {
 	snippets, err := f.load()
 	if err != nil {
@@ -52,7 +73,7 @@ func (f FileStore) GetAll() ([]models.Snippet, error) {
 	return snippets, nil
 }
 
-func (f FileStore) GetByID(id int) (models.Snippet, error) {
+func (f FileStore) GetByID(id string) (models.Snippet, error) {
 	snippets, err := f.load()
 	if err != nil {
 		return models.Snippet{}, err
@@ -65,7 +86,7 @@ func (f FileStore) GetByID(id int) (models.Snippet, error) {
 	return models.Snippet{}, ErrNotFound
 }
 
-func (f FileStore) Delete(id int) error {
+func (f FileStore) Delete(id string) error {
 	snippets, err := f.load()
 	if err != nil {
 		return err
@@ -88,4 +109,4 @@ func (f FileStore) Delete(id int) error {
 	return f.save(updated)
 }
 
-func (f FileStore) Search()
+func (f FileStore) Search(query string) ([]models.Snippet, error)
